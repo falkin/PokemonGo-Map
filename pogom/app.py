@@ -72,16 +72,20 @@ class Pogom(Flask):
         swLng = request.args.get('swLng')
         neLat = request.args.get('neLat')
         neLng = request.args.get('neLng')
+        idsString = "1,2,3,4,5,6,7,8,9,22,24,25,26,31,34,36,37,38,39,40,45,48,49,53,55,58,59,63,64,65,67,68,71,73,76,78,80,82,83,85,86,87,88,89,94,95,99,108,109,110,112,113,114,115,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,141,142,143,144,145,146,147,148,149,150,151"
         if request.args.get('pokemon', 'true') == 'true':
             if request.args.get('ids'):
                 ids = [int(x) for x in request.args.get('ids').split(',')]
                 d['pokemons'] = Pokemon.get_active_by_id(ids, swLat, swLng,
                                                          neLat, neLng)
             else:
-                d['pokemons'] = Pokemon.get_active(swLat, swLng, neLat, neLng)
+                ids = [int(x) for x in idsString.split(',')]
+                #log.info('idsssss: %s' % (ids))
+                d['pokemons'] = Pokemon.get_active_by_id(ids, swLat, swLng, neLat, neLng)
 
         if request.args.get('pokestops', 'false') == 'true':
-            d['pokestops'] = Pokestop.get_stops(swLat, swLng, neLat, neLng)
+            ids = [int(x) for x in idsString.split(',')]
+            d['pokestops'] = Pokestop.get_stops_by_ids(ids, swLat, swLng, neLat, neLng)
 
         if request.args.get('gyms', 'true') == 'true':
             d['gyms'] = Gym.get_gyms(swLat, swLng, neLat, neLng)

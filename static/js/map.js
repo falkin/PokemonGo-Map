@@ -301,6 +301,10 @@ function initMap() {
     redrawPokemon(map_data.pokemons);
     redrawPokemon(map_data.lure_pokemons);
   });
+
+  google.maps.event.addListener(map, 'click', function(event) {
+    changeLocation(event.latLng.lat(), event.latLng.lng());
+  });
 }
 
 function createSearchMarker() {

@@ -131,7 +131,6 @@ class Pokemon(BaseModel):
                 p['latitude'], p['longitude'] = \
                     transform_from_wgs_to_gcj(p['latitude'], p['longitude'])
             pokemons.append(p)
-
         return pokemons
 
 
@@ -157,6 +156,32 @@ class Pokestop(BaseModel):
             query = (Pokestop
                      .select()
                      .where((Pokestop.latitude >= swLat) &
+                            (Pokestop.longitude >= swLng) &
+                            (Pokestop.latitude <= neLat) &
+                            (Pokestop.longitude <= neLng))
+                     .dicts())
+
+        pokestops = []
+        for p in query:
+            if args.china:
+                p['latitude'], p['longitude'] = \
+                    transform_from_wgs_to_gcj(p['latitude'], p['longitude'])
+            pokestops.append(p)
+
+        return pokestops
+
+    @classmethod
+    def get_stops_by_ids(cls, ids, swLat, swLng, neLat, neLng):
+        if swLat is None or swLng is None or neLat is None or neLng is None:
+            query = (Pokestop
+                     .select()
+                     .where((Pokestop.active_pokemon_id << ids))
+                     .dicts())
+        else:
+            query = (Pokestop
+                     .select()
+                     .where((Pokestop.active_pokemon_id << ids) &
+                            (Pokestop.latitude >= swLat) &
                             (Pokestop.longitude >= swLng) &
                             (Pokestop.latitude <= neLat) &
                             (Pokestop.longitude <= neLng))
@@ -310,9 +335,11 @@ def parse_map(map_dict, iteration_num, step, step_location):
                             f['last_modified_timestamp_ms'] / 1000.0),
                     }
 
-    pokemons_upserted = 0
-    pokestops_upserted = 0
-    gyms_upserted = 0
+    pokemons_upserted = len(pokemons)
+    pokestops_upserted = len(pokestops)
+    gyms_upserted = len(gyms)
+
+
 
     if pokemons and config['parse_pokemon']:
         pokemons_upserted = len(pokemons)
@@ -329,10 +356,7 @@ def parse_map(map_dict, iteration_num, step, step_location):
         log.debug("Upserting {} gyms".format(len(gyms)))
         bulk_upsert(Gym, gyms)
 
-    log.info("Upserted {} pokemon, {} pokestops, and {} gyms".format(
-      pokemons_upserted,
-      pokestops_upserted,
-      gyms_upserted))
+
 
     scanned[0] = {
         'scanned_id': str(step_location[0])+','+str(step_location[1]),
